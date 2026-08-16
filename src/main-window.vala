@@ -52,6 +52,12 @@ public class MainWindow : Gtk.Window
 
     construct
     {
+        var screen = Gdk.Screen.get_default ();
+        var primary_monitor_num = screen.get_primary_monitor ();
+        var monitor_geometry = screen.get_monitor_geometry (primary_monitor_num);
+        double scale = Math.max(1.0, monitor_geometry.height / 600.0);
+        SlickGreeter.grid_size = (int)(40 * scale);
+
         events |= Gdk.EventMask.POINTER_MOTION_MASK;
 
         var accel_group = new Gtk.AccelGroup ();
@@ -68,7 +74,7 @@ public class MainWindow : Gtk.Window
         add (background);
         SlickGreeter.add_style_class (background);
 
-        idle_clock_overlay = new IdleClockOverlay ();
+        idle_clock_overlay = new IdleClockOverlay ((int)(150 * (SlickGreeter.grid_size / 40.0)));
         idle_clock_overlay.show ();
         background.add (idle_clock_overlay);
 
@@ -198,17 +204,21 @@ public class MainWindow : Gtk.Window
 
         if (SlickGreeter.singleton.test_mode)
         {
-            /* Simulate an 800x600 monitor to the left of a 640x480 monitor */
-            monitors = new List<Monitor> ();
-            monitors.append (new Monitor (0, 0, 800, 600));
-            monitors.append (new Monitor (800, 120, 640, 480));
-            background.set_monitors (monitors);
-            move_to_monitor (monitors.nth_data (0));
-            resize (background.width, background.height);
+            /* Use the real screen's own monitor layout so the test window
+               fills the actual display (e.g. 1920x1080) instead of a
+               hardcoded tiny fake monitor floating in the middle of the
+               screen. */
+            screen = get_screen ();
+            screen.monitors_changed.connect (monitors_changed_cb);
+            monitors_changed_cb (screen);
+
+            set_decorated (false);
+            move (0, 0);
+            fullscreen ();
         }
         else
         {
-            var screen = get_screen ();
+            screen = get_screen ();
             screen.monitors_changed.connect (monitors_changed_cb);
             monitors_changed_cb (screen);
         }
@@ -254,6 +264,26 @@ public class MainWindow : Gtk.Window
             content_box.margin_bottom = get_grid_offset (get_allocated_height ());
             apply_login_presentation ();
         }
+        
+        position_elements ();
+    }
+
+    private void position_elements ()
+    {
+        if (active_monitor == null)
+            return;
+
+        /* Idle clock centered on the monitor */
+        background.move (idle_clock_overlay, active_monitor.x, active_monitor.y);
+        idle_clock_overlay.set_size_request (active_monitor.width, active_monitor.height);
+
+        /* Login UI centered on the monitor */
+        var login_width = 9 * SlickGreeter.grid_size;
+        var login_height = 5 * SlickGreeter.grid_size;
+        var x = active_monitor.x + (active_monitor.width - login_width) / 2;
+        var y = active_monitor.y + (active_monitor.height - login_height) / 2;
+        background.move (login_box, x, y);
+        login_box.set_size_request (login_width, login_height);
     }
 
     public override void realize ()
@@ -376,11 +406,8 @@ public class MainWindow : Gtk.Window
     private void move_to_monitor (Monitor monitor)
     {
         active_monitor = monitor;
-        idle_clock_overlay.set_size_request (monitor.width, monitor.height);
-        login_box.set_size_request (monitor.width, monitor.height);
         background.set_active_monitor (monitor);
-        background.move (idle_clock_overlay, monitor.x, monitor.y);
-        background.move (login_box, monitor.x, monitor.y);
+        position_elements ();
 
         if (shutdown_dialog != null)
         {
