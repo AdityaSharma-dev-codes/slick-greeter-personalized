@@ -214,8 +214,6 @@ public class MainWindow : Gtk.Window
             monitors_changed_cb (screen);
 
             set_decorated (false);
-            move (0, 0);
-            fullscreen ();
         }
         else
         {

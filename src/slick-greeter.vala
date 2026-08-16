@@ -315,6 +315,15 @@ public class SlickGreeter
         main_window.realize ();
         main_window.setup_window();
         main_window.show ();
+
+        /* In test mode Cinnamon/another desktop WM manages the window.
+         * Request fullscreen only after the window is mapped; doing it in
+         * MainWindow's constructor is too early and setup_window() can
+         * overwrite the fullscreen request with a normal window geometry.
+         */
+        if (test_mode)
+            main_window.fullscreen ();
+
         main_window.get_window ().focus (Gdk.CURRENT_TIME);
         main_window.set_keyboard_state ();
     }
