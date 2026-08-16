@@ -195,7 +195,7 @@ public class MenuBar : Gtk.MenuBar
             append (session_menu);
         }
 
-        if (UGSettings.get_boolean (UGSettings.KEY_SHOW_CLOCK))
+        if (UGSettings.get_boolean (UGSettings.KEY_SHOW_CLOCK) && !UGSettings.get_boolean (UGSettings.KEY_IDLE_CLOCK_ENABLED))
         {
             clock_label = new Gtk.Label ("");
             var clock_fg = clock_label.get_style_context ().get_color (Gtk.StateFlags.NORMAL);

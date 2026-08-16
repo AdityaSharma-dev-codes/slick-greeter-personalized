@@ -29,6 +29,7 @@ public class MainWindow : Gtk.Window
     private bool monitor_setting_ok;
     private Background background;
     private IdleClockOverlay idle_clock_overlay;
+    private Gtk.EventBox menubox;
     private Gtk.Box login_box;
     private Gtk.Box hbox;
     private Gtk.Box content_box;
@@ -84,7 +85,7 @@ public class MainWindow : Gtk.Window
         background.add (login_box);
 
         /* Box for menubar shadow */
-        var menubox = new Gtk.EventBox ();
+        menubox = new Gtk.EventBox ();
         var menualign = new Gtk.Alignment (0.0f, 0.0f, 1.0f, 0.0f);
         var shadow_path = Path.build_filename (Config.PKGDATADIR,
                                                "shadow.png", null);
@@ -109,7 +110,7 @@ public class MainWindow : Gtk.Window
         menubox.show ();
         menualign.show ();
         menubox.add (menualign);
-        login_box.add (menubox);
+        background.add (menubox);
         SlickGreeter.add_style_class (menualign);
         SlickGreeter.add_style_class (menubox);
 
@@ -272,6 +273,12 @@ public class MainWindow : Gtk.Window
         if (active_monitor == null)
             return;
 
+        if (menubox != null)
+        {
+            background.move (menubox, active_monitor.x, active_monitor.y);
+            menubox.set_size_request (active_monitor.width, MENUBAR_HEIGHT);
+        }
+
         /* Idle clock centered on the monitor */
         background.move (idle_clock_overlay, active_monitor.x, active_monitor.y);
         idle_clock_overlay.set_size_request (active_monitor.width, active_monitor.height);
@@ -280,7 +287,10 @@ public class MainWindow : Gtk.Window
         var login_width = 9 * SlickGreeter.grid_size;
         var login_height = 5 * SlickGreeter.grid_size;
         var x = active_monitor.x + (active_monitor.width - login_width) / 2;
-        var y = active_monitor.y + (active_monitor.height - login_height) / 2;
+        var available_height = active_monitor.height - MENUBAR_HEIGHT;
+        if (available_height < 0)
+            available_height = 0;
+        var y = active_monitor.y + MENUBAR_HEIGHT + (available_height - login_height) / 2;
         background.move (login_box, x, y);
         login_box.set_size_request (login_width, login_height);
     }
