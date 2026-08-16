@@ -54,8 +54,9 @@ public class MainWindow : Gtk.Window
     {
         var screen = Gdk.Screen.get_default ();
         var primary_monitor_num = screen.get_primary_monitor ();
-        var monitor_geometry = screen.get_monitor_geometry (primary_monitor_num);
-        double scale = Math.max(1.0, monitor_geometry.height / 600.0);
+        Gdk.Rectangle monitor_geometry;
+        screen.get_monitor_geometry (primary_monitor_num, out monitor_geometry);
+        double scale = Math.fmax (1.0, monitor_geometry.height / 600.0);
         SlickGreeter.grid_size = (int)(40 * scale);
 
         events |= Gdk.EventMask.POINTER_MOTION_MASK;

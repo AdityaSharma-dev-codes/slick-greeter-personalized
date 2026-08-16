@@ -17,6 +17,8 @@
  * Authored by: Robert Ancell <robert.ancell@canonical.com>
  */
 
+public const int grid_size = 40;
+
 public class SlickGreeter
 {
     public static int grid_size = 40;
@@ -53,7 +55,6 @@ public class SlickGreeter
         /* Prepare to set the background */
         debug ("Creating background surface");
         background_surface = create_root_surface (Gdk.Screen.get_default ());
-
         greeter = new LightDM.Greeter ();
         greeter.show_message.connect ((text, type) => { show_message (text, type); });
         greeter.show_prompt.connect ((text, type) => { show_prompt (text, type); });
